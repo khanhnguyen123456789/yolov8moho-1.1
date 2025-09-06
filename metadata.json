@@ -1,0 +1,8 @@
+{
+  "name": "Yolov8Moho Project Dashboard",
+  "description": "A comprehensive dashboard and development guide for the Yolov8Moho project, which integrates AI-driven motion capture with 2D animation in Moho Studio Pro.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
