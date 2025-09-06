@@ -6,14 +6,6 @@ const SectionHeader: React.FC<{ title: string; className?: string }> = ({ title,
     <h3 className={`text-2xl font-semibold text-white border-l-4 border-teal-400 pl-4 font-orbitron ${className}`}>{title}</h3>
 );
 
-const SubHeader: React.FC<{ title: string; emoji: string }> = ({ title, emoji }) => (
-    <h4 className="text-xl font-semibold text-gray-300 mt-6 mb-3">
-        <span role="img" aria-label="icon" className="mr-2">{emoji}</span>
-        {title}
-    </h4>
-);
-
-
 const TaskDirective: React.FC<{ number: number; title: string; children: React.ReactNode }> = ({ number, title, children }) => (
     <div className="bg-black/20 p-4 rounded-md border border-[var(--panel-border)]">
         <h4 className="font-orbitron text-lg font-bold text-teal-400 mb-2">
@@ -25,224 +17,149 @@ const TaskDirective: React.FC<{ number: number; title: string; children: React.R
     </div>
 );
 
+// Code snippets for each task
+const task1Code = `
+-- TASK 1: Layer name check trước khi push keyframe
+-- Nếu user đổi tên layer Moho, hiển thị thông báo và không push keyframe
+local selectedLayer = moho.document:LayerByName(selectedLayerName)
+if selectedLayer == nil then
+    Alert("Layer '" .. selectedLayerName .. "' không tồn tại. Vui lòng chọn lại layer đúng tên.")
+    return -- thoát script để tránh ghi keyframe sai
+end
+`;
 
-const layerCheckCode = `
--- File: lua/camera_mapping.lua
-local layerName = gui.selectedLayerName -- lấy tên layer từ GUI dropdown
-local layer = moho:FindLayer(layerName)
+const task2Code = `
+-- TASK 2: Tự động scale timeline giả lập theo FPS video
+-- Nếu video FPS khác timeline FPS, điều chỉnh column keyframe
+local videoFPS = backend.getVideoFPS() -- giả lập hàm lấy FPS video
+local timelineFPS = timeline.getFPS()
+local scaleFactor = videoFPS / timelineFPS
 
-if layer == nil then
-    print("⚠️ Layer không tồn tại: "..layerName)
+-- Khi push keyframe:
+local timelineFrameIndex = math.floor(videoFrameIndex / scaleFactor)
+timeline.pushKeyframe(layerName, timelineFrameIndex, keyData)
+`;
+
+const task3Code = `
+-- TASK 3: Merge keyframe thay vì overwrite
+-- Khi Camera Plugin ON lại, merge dữ liệu camera với pose keyframe cũ
+local existingKF = timeline.getKeyframe(layerName, timelineFrameIndex)
+if existingKF then
+    existingKF.cameraData = newCameraData -- merge dữ liệu mới vào
+else
+    timeline.pushKeyframe(layerName, timelineFrameIndex, newCameraData)
+end
+`;
+
+const task4Code = `
+-- TASK 4: Backend phân tích video tách biệt
+-- Nếu plugin OFF -> dừng pipeline camera
+-- Nếu plugin ON -> chạy lại pipeline camera từ đầu, merge với pose
+if CameraPlugin.isON() then
+    backend.runCameraAnalysis(videoFile)
+    timeline.mergeCameraKeyframes()
+else
+    backend.stopCameraAnalysis()
+end
+`;
+
+const task5Code = `
+# TASK 5: Backend Python - phân tích tối đa 60s / chunk
+max_analysis_duration = 60 # seconds
+video_duration = get_video_duration(video_file)
+if video_duration > max_analysis_duration:
+    chunks = split_video_into_chunks(video_file, max_analysis_duration)
+else:
+    chunks = [video_file]
+
+for chunk in chunks:
+    analyze_chunk(chunk)
+`;
+
+const task6CodeLua = `
+-- Lua: kiểm tra layer trước khi push keyframe
+if not selectedLayer then
+    Alert("Layer không tồn tại!")
     return
 end
-
--- Push keyframe vào layer đã chọn
-layer:AddKeyFrame(frame, keypoint)
-
-
--- File: lua/gui.lua
--- GUI action:
-Dropdown list Layer Selection = moho:GetLayerNames()
 `;
 
-const timelineSyncCode = `
--- File: lua/timeline.lua
-local videoFPS = backend.GetVideoFPS()  -- từ video input
-local timelineColumns = #timeline.columns
-local scale = videoFPS / timelineColumns
-
-for videoFrame, data in pairs(videoFrames) do
-    local timelineFrame = math.floor(videoFrame / scale)
-    timeline:AddKeyFrame(timelineFrame, data)
-end
+const task6CodePython = `
+# Python: kiểm tra file video tồn tại + lỗi đọc
+try:
+    cap = cv2.VideoCapture(video_file)
+    if not cap.isOpened():
+        raise Exception("Không mở được video")
+except Exception as e:
+    print(f"[ERROR] {e}")
+    return
 `;
 
-const pluginToggleCode = `
--- File: lua/gui.lua
-local cameraPluginEnabled = false
-local cachedKeyframes = {}  -- lưu keyframe cũ
+const task7Code = `
+-- TASK 7: Tooltip cho từng icon camera trên timeline giả lập
+toolbarCameraFollow:setTooltip("Theo dõi camera (phím tắt 4)")
+toolbarCameraZoom:setTooltip("Thu phóng camera (phím tắt 5)")
+toolbarCameraRotate:setTooltip("Xoay camera (phím tắt 6)")
+toolbarCameraPan:setTooltip("Quét/nghiêng camera (phím tắt 7)")
+`;
 
-function ToggleCameraPlugin()
-    cameraPluginEnabled = not cameraPluginEnabled
-    if cameraPluginEnabled then
-        print("Camera Plugin ON → phân tích lại video")
-        local newKeyframes = backend.AnalyzeCameraVideo()
-        cachedKeyframes = MergeKeyframes(cachedKeyframes, newKeyframes)
-        PushKeyframesToTimeline(cachedKeyframes)
-    else
-        print("Camera Plugin OFF → bỏ phân tích camera")
-    end
-end
-
--- Merge logic:
-function MergeKeyframes(oldKF, newKF)
-    for frame, kp in pairs(newKF) do
-        if oldKF[frame] == nil then
-            oldKF[frame] = kp
-        else
-            oldKF[frame] = CombinePoseAndCamera(oldKF[frame], kp)
-        end
-    end
-    return oldKF
+const task8Code = `
+-- TASK 8: Cho user chọn phân tích chỉ Pose / Camera / Both
+local option = GUI.getPipelineOption() -- "pose", "camera", "both"
+if option == "pose" then
+    backend.runPoseAnalysis()
+elseif option == "camera" then
+    backend.runCameraAnalysis()
+elseif option == "both" then
+    backend.runPoseAnalysis()
+    backend.runCameraAnalysis()
 end
 `;
 
-const backendTimeLimitCode = `
-# File: backend/camera_analysis.py
-import time
-
-MAX_ANALYSIS_TIME = 60  # giây
-start_time = time.time()
-analysisTimeExceeded = False
-
-for frame in video_frames:
-    analyze_pose(frame)
-    analyze_camera(frame)
-    if time.time() - start_time > MAX_ANALYSIS_TIME:
-        print("⚠️ Phân tích video vượt 60s, dừng pipeline")
-        analysisTimeExceeded = True
-        break
-
-# --- On Lua side ---
-# if analysisTimeExceeded then
-#     print("⚠️ Phân tích video bị giới hạn 60s, chỉ một phần video được phân tích")
-# end
-`;
-
-const keyframePushCode = `
--- File: lua/camera_mapping.lua
-for frame, keypointData in pairs(cachedKeyframes) do
-    local timelineFrame = math.floor(frame / scale)
-    timeline:AddKeyFrame(timelineFrame, keypointData)
-end
-`;
-
-const detailedLuaCode = `
--- File: lua/camera_plugin_gui.lua
-LM.GUI = LM.GUI or {}
-
-local CameraPlugin = {}
-CameraPlugin.enabled = false
-CameraPlugin.cachedKeyframes = {}
-
--- Dropdown chọn layer
-function CameraPlugin:SelectLayer()
-    self.selectedLayerName = MOHO:GetLayerNames()[1] -- mặc định layer đầu
-    -- TODO: tạo dropdown GUI cho người dùng chọn layer
-end
-
--- Toggle Camera Plugin ON/OFF
-function CameraPlugin:Toggle()
-    self.enabled = not self.enabled
-    if self.enabled then
-        print("Camera Plugin ON → phân tích lại video")
-        -- gọi backend python
-        local newKeyframes = MOHO:CallBackend("AnalyzeCameraVideo")
-        self.cachedKeyframes = self:MergeKeyframes(self.cachedKeyframes, newKeyframes)
-        self:PushKeyframes()
-    else
-        print("Camera Plugin OFF → bỏ phân tích camera")
-    end
-end
-
--- Merge keyframe camera + pose
-function CameraPlugin:MergeKeyframes(oldKF, newKF)
-    for frame, kp in pairs(newKF) do
-        if oldKF[frame] == nil then
-            oldKF[frame] = kp
-        else
-            oldKF[frame] = self:CombinePoseAndCamera(oldKF[frame], kp)
-        end
-    end
-    return oldKF
-end
-
--- Push keyframe vào timeline giả lập
-function CameraPlugin:PushKeyframes()
-    local timelineFPS = MOHO:GetTimelineFPS()
-    local videoFPS = MOHO:CallBackend("GetVideoFPS")
-    local scale = videoFPS / timelineFPS
-
-    for frame, kp in pairs(self.cachedKeyframes) do
-        local timelineFrame = math.floor(frame / scale)
-        MOHO:TimelineAddKeyframe(self.selectedLayerName, timelineFrame, kp)
-    end
-end
-
--- Combine keypoints pose + camera
-function CameraPlugin:CombinePoseAndCamera(oldKP, newKP)
-    local combined = {}
-    for k,v in pairs(oldKP) do combined[k] = v end
-    for k,v in pairs(newKP) do combined[k] = v end
-    return combined
-end
-
-return CameraPlugin
-`;
-
-const detailedPythonCode = `
-# File: backend/camera_analysis.py
-import time
-import cv2
-from yolov8 import YOLOv8  # ví dụ, thay thế bằng model phân tích camera phù hợp
-
-MAX_ANALYSIS_TIME = 60  # giây
-
-class CameraAnalyzer:
-    def __init__(self, video_path):
-        self.video_path = video_path
-        self.keyframes = {}
-        self.fps = self.get_fps()
-
-    def get_fps(self):
-        cap = cv2.VideoCapture(self.video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        cap.release()
-        return fps
-
-    def analyze_video(self):
-        cap = cv2.VideoCapture(self.video_path)
-        model = YOLOv8("camera_model.pt")  # hoặc model phù hợp với phân tích khung camera
-        start_time = time.time()
-        frame_index = 0
-
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            # Giới hạn thời gian phân tích
-            if time.time() - start_time > MAX_ANALYSIS_TIME:
-                print("⚠️ Phân tích vượt 60s, dừng pipeline")
-                break
-
-            # Phân tích tư thế nhân vật
-            pose_data = self.analyze_pose(frame)
-
-            # Phân tích kỹ thuật camera: zoom, rotate, tilt
-            camera_data = self.analyze_camera(frame, model)
-
-            # Merge pose + camera
-            self.keyframes[frame_index] = {**pose_data, **camera_data}
-
-            frame_index += 1
-
-        cap.release()
-        return self.keyframes
-
-    def analyze_pose(self, frame):
-        # TODO: sử dụng YOLOv8-Pose hoặc MediaPipe Pose
-        return {"pose": "mock_pose_data"}
-
-    def analyze_camera(self, frame, model):
-        # TODO: phân tích frame -> zoom/rotate/tilt
-        return {"camera": "mock_camera_data"}
-`;
 
 export const CameraPluginDirective: React.FC = () => {
     return (
         <div className="panel p-6 space-y-10">
             <div>
-                <SectionHeader title="Xử lý Nguy cơ Xung đột Tiềm ẩn" className="mb-6" />
+                <SectionHeader title="Chỉ thị Kỹ thuật: Cải tiến & Nâng cấp Camera Plugin" className="mb-6" />
                 <div className="space-y-6">
-                    <TaskDirective
+                    <TaskDirective number={1} title="Kiểm tra và xác thực Layer Name (Lua)">
+                        <p>Kiểm tra nếu người dùng đã đổi tên layer trong Moho. Nếu layer không tồn tại, hiển thị thông báo lỗi và ngăn việc ghi keyframe sai chỗ.</p>
+                        <CodeBlock code={task1Code} language="lua" />
+                    </TaskDirective>
+                    <TaskDirective number={2} title="Đồng bộ Frame Index với Video FPS">
+                        <p>Tự động điều chỉnh timeline giả lập dựa trên FPS của video đầu vào. Điều này đảm bảo keyframes luôn được đặt chính xác, bất kể sự khác biệt về tốc độ khung hình.</p>
+                        <CodeBlock code={task2Code} language="lua" />
+                    </TaskDirective>
+                    <TaskDirective number={3} title="Merge Keyframe Pose + Camera">
+                        <p>Khi bật lại Camera Plugin, dữ liệu camera mới sẽ được hợp nhất (merge) với các keyframe tư thế (pose) đã có, thay vì ghi đè. Điều này bảo toàn dữ liệu cũ và cho phép làm việc song song.</p>
+                        <CodeBlock code={task3Code} language="lua" />
+                    </TaskDirective>
+                    <TaskDirective number={4} title="Bật/Tắt Camera Plugin an toàn">
+                        <p>Tách biệt pipeline phân tích camera. Khi plugin bị tắt, chỉ có pipeline camera dừng lại, không ảnh hưởng đến pipeline pose. Khi bật lại, nó sẽ phân tích lại từ đầu và hợp nhất kết quả.</p>
+                        <CodeBlock code={task4Code} language="lua" />
+                    </TaskDirective>
+                    <TaskDirective number={5} title="Giới hạn Phân tích Video dài">
+                        <p>Để tránh treo máy hoặc lag khi xử lý video quá dài, backend Python sẽ tự động chia video thành các đoạn (chunks) tối đa 60 giây và xử lý tuần tự.</p>
+                        <CodeBlock code={task5Code} language="python" />
+                    </TaskDirective>
+                    <TaskDirective number={6} title="Xử lý Ngoại lệ (Exception Handling)">
+                        <p>Triển khai cơ chế bắt lỗi ở cả Lua (kiểm tra sự tồn tại của layer) và Python (kiểm tra tệp video hợp lệ) để ngăn ngừa các sự cố và cung cấp thông báo lỗi rõ ràng.</p>
+                        <h5 className="text-md font-semibold text-white mt-4 mb-2">Phía Lua</h5>
+                        <CodeBlock code={task6CodeLua} language="lua" />
+                        <h5 className="text-md font-semibold text-white mt-4 mb-2">Phía Python</h5>
+                        <CodeBlock code={task6CodePython} language="python" />
+                    </TaskDirective>
+                    <TaskDirective number={7} title="Cải thiện Hướng dẫn Người dùng (UX)">
+                        <p>Thêm các tooltip hướng dẫn chi tiết cho từng icon và chức năng liên quan đến camera trên timeline, giúp người dùng mới dễ dàng nắm bắt cách sử dụng.</p>
+                        <CodeBlock code={task7Code} language="lua" />
+                    </TaskDirective>
+                    <TaskDirective number={8} title="Tùy chọn Pipeline để Tối ưu Hiệu suất">
+                        <p>Cung cấp cho người dùng các tùy chọn để chỉ chạy pipeline phân tích tư thế (Pose), chỉ camera, hoặc cả hai. Điều này giúp giảm tải cho máy tính khi không cần thiết phải phân tích tất cả mọi thứ.</p>
+                        <CodeBlock code={task8Code} language="lua" />
+                    </TaskDirective>
+                </div>
+            </div>
+        </div>
+    );
+};

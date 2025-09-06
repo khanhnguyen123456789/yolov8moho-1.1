@@ -96,7 +96,7 @@ const App: React.FC = () => {
           <DeploymentOrder />
         </Section>
 
-        <Section title="Chỉ thị Kỹ thuật: Xung đột Camera Plugin">
+        <Section title="Chỉ thị Kỹ thuật: Cải tiến & Nâng cấp Camera Plugin">
           <CameraPluginDirective />
         </Section>
         
