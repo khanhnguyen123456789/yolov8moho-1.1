@@ -16,6 +16,7 @@ import { Settings } from './components/Settings';
 import { TrackingFeatures } from './components/TrackingFeatures';
 import { HybridAiArchitecture } from './components/HybridAiArchitecture';
 import { DeploymentOrder } from './components/DeploymentOrder';
+import { CameraPluginDirective } from './components/CameraPluginDirective';
 import {
   TECH_STACK_PROGRAMMING,
   TECH_STACK_AI,
@@ -93,6 +94,10 @@ const App: React.FC = () => {
         
         <Section title="Lệnh Triển Khai Dự Án">
           <DeploymentOrder />
+        </Section>
+
+        <Section title="Chỉ thị Kỹ thuật: Xung đột Camera Plugin">
+          <CameraPluginDirective />
         </Section>
         
         <Section title="Giai Đoạn Phát Triển Nước Rút (Final Sprint)">
