@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 export type SuggestionAction = 'increase_amplitude' | 'decrease_amplitude' | 'shorten_timing' | 'lengthen_timing' | 'add_anticipation';

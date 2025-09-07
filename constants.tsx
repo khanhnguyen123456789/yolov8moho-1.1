@@ -487,121 +487,160 @@ export const RELEASE_CHECKLIST_ITEMS: ReleaseChecklistItem[] = [
     { text: "Thu thập phản hồi từ nhóm beta testers và sửa lỗi cuối cùng.", status: 'upcoming' },
 ];
 
-const ADVANCED_WEBSOCKET_PYTHON = `
-import asyncio
-import websockets
-import json
-from enum import Enum
+const PLUGIN_VERIFICATION_CODE = `
+# 1. Kiểm tra môi trường Python & dependencies
+python --version
+pip install --upgrade pip
+pip install torch opencv-python ultralytics PyQt6
 
-class MessageType(Enum):
-    POSE_DATA = "pose_data"
-    STATUS_UPDATE = "status_update"
-    ERROR = "error"
+# 2. Kiểm tra phiên bản Moho đã cài
+# Windows: đọc từ registry
+# macOS: kiểm tra /Applications/MohoPro.app
 
-# ... (handler function) ...
+# 3. Triển khai file plugin
+# Lua scripts -> Moho/Scripts/tool
+# Python backend -> Moho/Plugins/yolov8moho
 
-async def send_status_update(websocket, message):
-    """Gửi cập nhật trạng thái tới client."""
-    status_payload = {
-        "type": MessageType.STATUS_UPDATE.value,
-        "message": message
-    }
-    await websocket.send(json.dumps(status_payload))
-
-# Trong handler, sau khi xử lý dữ liệu:
-# await send_status_update(websocket, "Frame 101 processed successfully.")
+# 4. Xác thực chức năng cốt lõi
+# - Timeline sync (giới hạn 60s)
+# - Layer mapping (validate tên layer)
+# - Keyframe merge (bật/tắt plugin)
 `;
 
-const ADVANCED_WEBSOCKET_KOTLIN = `
-// Sử dụng thư viện như Gson để parse JSON
-data class WebSocketMessage(val type: String, val message: String?, val data: PoseData?)
+const INSTALLERS_BUILD_CODE = `
+# --- INSTALLER WINDOWS (.exe) ---
+# 1. Sử dụng NSIS hoặc PyInstaller để đóng gói
+pyinstaller --onefile --windowed --icon=app.ico installer_script.py
+# 2. Script cài đặt phải:
+#   - Tự động kiểm tra Python & Moho.
+#   - Sao chép file vào đúng thư mục.
+#   - Tạo shortcut Desktop.
 
-// Trong onMessage callback
-val gson = Gson()
-val wsMessage = gson.fromJson(text, WebSocketMessage::class.java)
-
-when (wsMessage.type) {
-    "status_update" -> {
-        // Cập nhật UI với wsMessage.message
-        updateStatusOnScreen(wsMessage.message)
-    }
-    "pose_data" -> {
-        // Xử lý dữ liệu tư thế (nếu server gửi lại)
-    }
-    // ... các trường hợp khác
-}
+# --- INSTALLER MACOS (.pkg) ---
+# 1. Sử dụng 'pkgbuild' và 'productbuild'
+pkgbuild --root "./dist" --identifier com.yolov8moho --version 1.1 yolov8moho.pkg
+productbuild --package yolov8moho.pkg --sign "Developer ID" Yolov8Moho_Installer.pkg
+# 2. Script phải xử lý quyền truy cập thư mục /Applications.
 `;
 
-const BACKGROUND_SERVICE_KOTLIN = `
-class MotionCaptureService : Service() {
-    // ... (logic của service) ...
+const MOBILE_BUILD_CODE = `
+# --- ỨNG DỤNG ANDROID (APK) ---
+# 1. Cấu hình buildozer.spec
+# requirements = kivy, torch, opencv-python, ultralytics
+# android.permissions = CAMERA, INTERNET
+# 2. Build & deploy
+buildozer android debug deploy run
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Hiển thị một notification để giữ service chạy
-        val notification = createForegroundNotification()
-        startForeground(NOTIFICATION_ID, notification)
+# --- ỨNG DỤNG IOS (IPA) ---
+# 1. Sử dụng Kivy-iOS hoặc Flutter
+# toolchain build kivy_ios
+# 2. Tích hợp model AI qua CoreML hoặc TFLite
+# 3. Build và ký ứng dụng bằng Xcode
+`;
 
-        // Bắt đầu xử lý camera và AI ở đây
-        // ...
+const DOCS_WEBSITE_CODE = `
+# 1. Cài đặt MkDocs với theme Material
+pip install mkdocs mkdocs-material
 
-        return START_STICKY // Tự khởi động lại nếu bị hệ thống kill
-    }
-    
-    // ... (implement onBind, onDestroy) ...
-}
+# 2. Cấu trúc nội dung
+# docs/index.md -> Trang chủ
+# docs/install.md -> Hướng dẫn cài đặt
+# docs/tutorials/ -> Video hướng dẫn
+# docs/faq.md -> Câu hỏi thường gặp
+
+# 3. Build và deploy lên GitHub Pages
+mkdocs gh-deploy
+`;
+
+const COMMUNITY_SETUP_CODE = `
+# 1. Thiết lập Discord Server
+#   - Kênh: #announcements, #support, #showcase, #feature-requests
+# 2. Cài đặt Forum (Discourse / NodeBB)
+#   - Tích hợp đăng nhập SSO
+# 3. Tích hợp Webhook
+#   - GitHub commit/release -> #announcements trên Discord
+`;
+
+const FINAL_QA_CHECKLIST_CODE = `
+# Trạng thái: [ ] Chưa xong, [x] Hoàn thành
+
+[ ] Plugin Moho: Timeline 60s, layer mapping, merge keyframe.
+[ ] Installer Windows: Cài đặt và gỡ bỏ thành công.
+[ ] Installer macOS: Cài đặt và gỡ bỏ thành công.
+[ ] App Android (APK): Chạy ổn định trên nhiều thiết bị.
+[ ] App iOS (IPA): TestFlight build thành công.
+[ ] Website Tài liệu: Tất cả các trang đã được duyệt.
+[ ] Cộng đồng: Discord server và forum đã sẵn sàng.
 `;
 
 
 export const FINAL_SPRINT_PHASES: SprintPhase[] = [
     {
         phase: 1,
-        title: "Tối ưu hóa Giao tiếp và Độ tin cậy",
-        description: "Nâng cao độ ổn định của kết nối WebSocket và đảm bảo ứng dụng Android có thể chạy nền một cách mượt mà.",
+        title: "Giai đoạn 1: Đóng gói Sản phẩm",
+        description: "Tập trung vào việc hoàn thiện plugin, kiểm tra các chức năng cốt lõi và tạo các trình cài đặt thân thiện với người dùng cho Windows và macOS.",
         tasks: [
             {
-                description: "Triển khai một giao thức WebSocket hai chiều mạnh mẽ hơn. Thay vì chỉ gửi dữ liệu từ Android -> PC, server trên PC sẽ gửi lại các gói tin xác nhận (acknowledgement) và cập nhật trạng thái cho Android. Điều này cho phép UI trên Android hiển thị trạng thái kết nối chính xác hơn (ví dụ: 'Đang kết nối', 'Đã nhận dữ liệu', 'Mất kết nối').",
+                description: "Hoàn thiện Plugin Moho & Lua Mapping: Thực hiện các kiểm tra cuối cùng về môi trường, cài đặt file và các chức năng cốt lõi như đồng bộ timeline, ánh xạ layer và hợp nhất keyframe.",
                 code: {
-                    title: "Cấu trúc tin nhắn WebSocket hai chiều (Python & Kotlin)",
-                    language: "python",
-                    code: ADVANCED_WEBSOCKET_PYTHON,
+                    title: "Checklist Hoàn thiện Plugin (Shell)",
+                    language: "shell",
+                    code: PLUGIN_VERIFICATION_CODE,
                 }
             },
             {
-                description: "Chuyển logic xử lý AI và camera trên Android vào một Foreground Service. Điều này đảm bảo rằng ngay cả khi người dùng chuyển sang ứng dụng khác hoặc tắt màn hình, quá trình ghi hình và gửi dữ liệu vẫn tiếp tục mà không bị hệ điều hành Android ngắt quãng.",
+                description: "Xây dựng Trình cài đặt (Windows & macOS): Tạo các gói cài đặt (.exe, .pkg) để tự động hóa quá trình thiết lập cho người dùng cuối, bao gồm kiểm tra dependencies và sao chép file.",
                 code: {
-                    title: "Ví dụ về Foreground Service (Kotlin)",
-                    language: "kotlin",
-                    code: BACKGROUND_SERVICE_KOTLIN,
+                    title: "Kịch bản Build Trình cài đặt (Shell)",
+                    language: "shell",
+                    code: INSTALLERS_BUILD_CODE,
                 }
             }
         ]
     },
     {
         phase: 2,
-        title: "Tích hợp AI Tạo sinh & Mở rộng",
-        description: "Sử dụng các mô hình AI tiên tiến để tự động tạo và tinh chỉnh chuyển động, đồng thời chuẩn bị cho tương lai.",
+        title: "Giai đoạn 2: Triển khai Di động & Web",
+        description: "Xây dựng và đóng gói các ứng dụng cho Android và iOS, đồng thời tạo một trang web tài liệu trung tâm để hướng dẫn người dùng.",
         tasks: [
             {
-                description: "Tích hợp một mô hình ngôn ngữ nhỏ (ví dụ: Gemma, Gemini Nano) vào plugin. Người dùng có thể nhập các mô tả chuyển động bằng ngôn ngữ tự nhiên (ví dụ: 'nhân vật đi bộ một cách buồn bã' hoặc 'làm cho cú nhảy trông mạnh mẽ hơn'). AI sẽ phân tích và tự động điều chỉnh các đường cong (curves) và thời gian (timing) trong Motion Editor để tạo ra hiệu ứng mong muốn."
+                description: "Đóng gói Ứng dụng Di động (Android & iOS): Cấu hình và build các tệp APK và IPA, đảm bảo các quyền cần thiết và tích hợp backend AI một cách chính xác.",
+                code: {
+                    title: "Quy trình Build Di động (Shell)",
+                    language: "shell",
+                    code: MOBILE_BUILD_CODE,
+                }
             },
             {
-                description: "Phát triển một hệ thống API Scripting (sử dụng Python và Lua) cho plugin. Điều này cho phép các studio và người dùng chuyên nghiệp tự động hóa các tác vụ lặp đi lặp lại, tích hợp Yolov8Moho vào quy trình làm việc hiện có của họ, và xây dựng các công cụ tùy chỉnh trên nền tảng của plugin."
+                description: "Xây dựng Website Tài liệu: Sử dụng MkDocs để tạo một trang tài liệu chuyên nghiệp, bao gồm hướng dẫn cài đặt, video tutorials và các câu hỏi thường gặp.",
+                code: {
+                    title: "Lệnh triển khai Website Tài liệu (Shell)",
+                    language: "shell",
+                    code: DOCS_WEBSITE_CODE,
+                }
             }
         ]
     },
     {
         phase: 3,
-        title: "Phát hành & Hỗ trợ Cộng đồng",
-        description: "Hoàn thiện sản phẩm, đóng gói, và xây dựng một nền tảng để hỗ trợ người dùng và phát triển trong tương lai.",
+        title: "Giai đoạn 3: Cộng đồng & Phát hành",
+        description: "Thiết lập các kênh hỗ trợ cộng đồng và thực hiện quy trình kiểm tra chất lượng cuối cùng (QA) trên toàn bộ hệ sinh thái trước khi phát hành chính thức.",
         tasks: [
             {
-                description: "Xây dựng một trình cài đặt (installer) cho cả Windows và macOS để đơn giản hóa quá trình thiết lập plugin. Trình cài đặt sẽ tự động kiểm tra phiên bản Moho, cài đặt các thư viện Python cần thiết, và đặt các tệp plugin vào đúng thư mục."
+                description: "Thiết lập Nền tảng Cộng đồng: Tạo server Discord và diễn đàn để người dùng có thể báo cáo lỗi, yêu cầu tính năng và hỗ trợ lẫn nhau.",
+                code: {
+                    title: "Các bước Thiết lập Cộng đồng",
+                    language: "shell",
+                    code: COMMUNITY_SETUP_CODE,
+                }
             },
             {
-                description: "Tạo một trang web tài liệu chi tiết (sử dụng các công cụ như MkDocs hoặc Docusaurus) bao gồm hướng dẫn cài đặt, video tutorials cho từng tính năng, phần giải đáp các câu hỏi thường gặp (FAQ), và tài liệu tham khảo API cho scripting."
-            },
-            {
-                description: "Thiết lập một kênh Discord hoặc một diễn đàn cộng đồng để người dùng có thể chia sẻ tác phẩm, báo cáo lỗi, đề xuất tính năng mới và hỗ trợ lẫn nhau. Xây dựng một cộng đồng mạnh mẽ sẽ là chìa khóa cho sự thành công lâu dài của dự án."
+                description: "Kiểm tra Cuối cùng (Final QA): Thực hiện một checklist kiểm tra toàn diện để đảm bảo tất cả các thành phần của dự án hoạt động đồng bộ và sẵn sàng cho việc phát hành.",
+                code: {
+                    title: "Checklist Kiểm tra Chất lượng Cuối cùng",
+                    language: "markdown",
+                    code: FINAL_QA_CHECKLIST_CODE,
+                }
             }
         ]
     }
