@@ -22,6 +22,7 @@ import { Timeline } from './components/Timeline';
 import { Yolov8MohoV1_1Directives } from './components/Yolov8MohoV1_1Directives';
 import { FixDirectives } from './components/FixDirectives';
 import { FixesAndEnhancementsDirectives } from './components/FixesAndEnhancementsDirectives';
+import { TechnicalDirectivesV3 } from './components/TechnicalDirectivesV3';
 import {
   TECH_STACK_PROGRAMMING,
   TECH_STACK_AI,
@@ -119,6 +120,10 @@ const App: React.FC = () => {
 
         <Section title="YOLov8Moho - Fixes & Enhancements">
           <FixesAndEnhancementsDirectives />
+        </Section>
+
+        <Section title="Yêu cầu thực hiện: Tối ưu hóa Timeline & Pipeline">
+            <TechnicalDirectivesV3 />
         </Section>
         
         <Section title="Giai Đoạn Phát Triển Nước Rút (Final Sprint)">
