@@ -21,6 +21,7 @@ import { ImplementationDirectives } from './components/ImplementationDirectives'
 import { Timeline } from './components/Timeline';
 import { Yolov8MohoV1_1Directives } from './components/Yolov8MohoV1_1Directives';
 import { FixDirectives } from './components/FixDirectives';
+import { FixesAndEnhancementsDirectives } from './components/FixesAndEnhancementsDirectives';
 import {
   TECH_STACK_PROGRAMMING,
   TECH_STACK_AI,
@@ -114,6 +115,10 @@ const App: React.FC = () => {
 
         <Section title="Yêu cầu thực hiện – Fix">
           <FixDirectives />
+        </Section>
+
+        <Section title="YOLov8Moho - Fixes & Enhancements">
+          <FixesAndEnhancementsDirectives />
         </Section>
         
         <Section title="Giai Đoạn Phát Triển Nước Rút (Final Sprint)">
@@ -283,7 +288,7 @@ const App: React.FC = () => {
                 Để giúp người dùng dễ dàng chẩn đoán các sự cố kết nối, plugin Moho sẽ được trang bị nút "Kiểm tra Kết nối". Khi được nhấn, plugin sẽ không chờ đợi dữ liệu từ client mà sẽ chủ động gửi một gói tin "ping" tới địa chỉ IP đã được lưu từ lần kết nối thành công cuối cùng. Ứng dụng Android sẽ được lập trình để tự động phản hồi bằng một gói tin "pong". Nếu nhận được phản hồi trong một khoảng thời gian ngắn, giao diện sẽ hiển thị thông báo "Kết nối thành công!". Ngược lại, nếu kết nối thất bại, hết thời gian chờ, hoặc bị từ chối, một thông báo lỗi cụ thể sẽ được hiển thị. Tính năng này cho phép người dùng xác định nhanh chóng liệu vấn đề nằm ở kết nối mạng, tường lửa, hay do ứng dụng Android chưa sẵn sàng, mà không cần phải thực hiện lại toàn bộ quy trình quét mã QR.
             </p>
             <div>
-                <h3 className="text-xl font-semibold text-white mb-4">Plugin Moho: Logic Nút "Kiểm tra Kết nối" (Python)</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Plugin Moho: Logic Nút "Kiểm tra kết nối" (Python)</h3>
                 <CodeBlock code={WEBSOCKET_TEST_CONNECTION_PYTHON_EXAMPLE} language="python" />
             </div>
         </Section>
