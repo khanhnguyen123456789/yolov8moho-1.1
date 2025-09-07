@@ -487,134 +487,202 @@ export const RELEASE_CHECKLIST_ITEMS: ReleaseChecklistItem[] = [
     { text: "Thu thập phản hồi từ nhóm beta testers và sửa lỗi cuối cùng.", status: 'upcoming' },
 ];
 
-const PLUGIN_VERIFICATION_CODE = `
-# 1. Kiểm tra môi trường Python & dependencies
-python --version
-pip install --upgrade pip
-pip install torch opencv-python ultralytics PyQt6
+const WINDOWS_INSTALLER_CODE = `
+# 1. Tạo thư mục build cho installer
+mkdir build_installer/windows
+cd build_installer/windows
 
-# 2. Kiểm tra phiên bản Moho đã cài
-# Windows: đọc từ registry
-# macOS: kiểm tra /Applications/MohoPro.app
+# 2. Copy plugin Lua + GUI + Python scripts vào thư mục chuẩn
+cp -r ../../yolov8moho/plugin/* .
 
-# 3. Triển khai file plugin
-# Lua scripts -> Moho/Scripts/tool
-# Python backend -> Moho/Plugins/yolov8moho
+# 3. Kiểm tra phiên bản Moho đã cài trên máy
+# (Windows registry hoặc file path)
+python check_moho_version.py
 
-# 4. Xác thực chức năng cốt lõi
-# - Timeline sync (giới hạn 60s)
-# - Layer mapping (validate tên layer)
-# - Keyframe merge (bật/tắt plugin)
+# 4. Cài đặt thư viện Python cần thiết (requirements.txt)
+pip install -r ../../yolov8moho/requirements.txt
+
+# 5. Dùng PyInstaller để đóng gói Python backend AI thành exe
+pyinstaller --onefile main.py --name Yolov8Moho
+
+# 6. Tích hợp plugin + exe vào một trình cài đặt (Inno Setup hoặc NSIS)
+# Script Inno Setup (.iss) ví dụ:
+# - Copy tất cả file vào C:\\Program Files\\Yolov8Moho
+# - Tạo shortcut Desktop
+# - Kiểm tra Moho version trước khi cài
+# - Thêm tùy chọn bật/tắt camera plugin khi cài đặt
 `;
 
-const INSTALLERS_BUILD_CODE = `
-# --- INSTALLER WINDOWS (.exe) ---
-# 1. Sử dụng NSIS hoặc PyInstaller để đóng gói
-pyinstaller --onefile --windowed --icon=app.ico installer_script.py
-# 2. Script cài đặt phải:
-#   - Tự động kiểm tra Python & Moho.
-#   - Sao chép file vào đúng thư mục.
-#   - Tạo shortcut Desktop.
+const MACOS_INSTALLER_CODE = `
+# 1. Tạo thư mục build cho macOS
+mkdir build_installer/macos
+cd build_installer/macos
 
-# --- INSTALLER MACOS (.pkg) ---
-# 1. Sử dụng 'pkgbuild' và 'productbuild'
-pkgbuild --root "./dist" --identifier com.yolov8moho --version 1.1 yolov8moho.pkg
-productbuild --package yolov8moho.pkg --sign "Developer ID" Yolov8Moho_Installer.pkg
-# 2. Script phải xử lý quyền truy cập thư mục /Applications.
+# 2. Copy plugin Lua + GUI + Python scripts
+cp -r ../../yolov8moho/plugin/* .
+
+# 3. Cài các thư viện Python cần thiết
+pip3 install -r ../../yolov8moho/requirements.txt
+
+# 4. Kiểm tra Moho.app path
+python3 check_moho_version_mac.py
+
+# 5. Dùng py2app để đóng gói Python backend AI
+python3 setup.py py2app
+
+# 6. Tạo pkg hoặc dmg sử dụng \`pkgbuild\` và \`productbuild\`
+# - Tự động đặt plugin + Python scripts vào đúng thư mục
+# - Đảm bảo quyền thực thi cho Lua plugin
+# - Tạo shortcut mở Moho Studio Pro kèm plugin
 `;
 
-const MOBILE_BUILD_CODE = `
-# --- ỨNG DỤNG ANDROID (APK) ---
-# 1. Cấu hình buildozer.spec
-# requirements = kivy, torch, opencv-python, ultralytics
-# android.permissions = CAMERA, INTERNET
-# 2. Build & deploy
-buildozer android debug deploy run
+const ANDROID_BUILD_CODE = `
+# 1. Dùng Android Studio, tạo project Yolov8Moho
+# - Kotlin / Java frontend
+# - Python backend (kết hợp Chaquopy hoặc PyTorch Mobile)
+# - GUI mô phỏng timeline giả lập plugin Moho
 
-# --- ỨNG DỤNG IOS (IPA) ---
-# 1. Sử dụng Kivy-iOS hoặc Flutter
-# toolchain build kivy_ios
-# 2. Tích hợp model AI qua CoreML hoặc TFLite
-# 3. Build và ký ứng dụng bằng Xcode
+# 2. Tích hợp model AI đã huấn luyện sẵn (YOLOv8 hoặc lựa chọn khác)
+# - Chuyển sang TFLite để giảm dung lượng
+
+# 3. Build APK
+./gradlew assembleRelease
+
+# 4. Kiểm tra tính năng:
+# - Timeline giả lập
+# - Camera plugin on/off
+# - Keyframe mapping Lua
+`;
+
+const IOS_BUILD_CODE = `
+# 1. Dùng Xcode tạo project Yolov8Moho-iOS
+# - SwiftUI frontend
+# - Backend AI dùng CoreML hoặc PyTorch Mobile
+
+# 2. Chuyển model YOLOv8 sang CoreML/TFLite
+# - Giữ pipeline backend tách biệt
+# - Timeline giả lập + Lua mapping tương thích
+
+# 3. Tạo build .ipa
+xcodebuild -scheme Yolov8Moho-iOS -configuration Release archive
+
+# 4. Test trên Simulator & Device
+# - Timeline giả lập
+# - Keyframe camera plugin
+# - Camera plugin bật/tắt
 `;
 
 const DOCS_WEBSITE_CODE = `
-# 1. Cài đặt MkDocs với theme Material
-pip install mkdocs mkdocs-material
+# 1. Chọn công cụ: MkDocs hoặc Docusaurus
+# mkdir docs
+# cd docs
 
-# 2. Cấu trúc nội dung
-# docs/index.md -> Trang chủ
-# docs/install.md -> Hướng dẫn cài đặt
-# docs/tutorials/ -> Video hướng dẫn
-# docs/faq.md -> Câu hỏi thường gặp
+# 2. Tạo tài liệu cài đặt, Lua API, FAQ
+# mkdocs new .
+# mkdocs build
 
-# 3. Build và deploy lên GitHub Pages
-mkdocs gh-deploy
+# 3. Thêm video tutorials vào docs:
+# - Video hướng dẫn timeline giả lập
+# - Cách bật/tắt camera plugin
+# - Export keyframe sang Moho chính thức
+
+# 4. Host website (Netlify / GitHub Pages)
 `;
 
 const COMMUNITY_SETUP_CODE = `
-# 1. Thiết lập Discord Server
-#   - Kênh: #announcements, #support, #showcase, #feature-requests
-# 2. Cài đặt Forum (Discourse / NodeBB)
-#   - Tích hợp đăng nhập SSO
-# 3. Tích hợp Webhook
-#   - GitHub commit/release -> #announcements trên Discord
+# 1. Tạo server Discord / Forum
+# - Channels: support, showcase, bug-report, feature-request
+# - Roles: moderator, developer, user
+
+# 2. Tích hợp webhook từ website docs để thông báo release
+# 3. Khuyến khích user chia sẻ video sample, plugin config
 `;
 
 const FINAL_QA_CHECKLIST_CODE = `
-# Trạng thái: [ ] Chưa xong, [x] Hoàn thành
+# --- KIỂM THỬ TÍNH NĂNG CỐT LÕI ---
+[ ] Timeline giả lập không vượt quá 60s.
+[ ] Lua layer mapping phải match chính xác tên layer trong Moho.
+[ ] Bật/tắt camera plugin phải tách biệt pipeline backend AI.
+[ ] Hạn chế keyframe trùng lặp khi bật lại plugin.
 
-[ ] Plugin Moho: Timeline 60s, layer mapping, merge keyframe.
-[ ] Installer Windows: Cài đặt và gỡ bỏ thành công.
-[ ] Installer macOS: Cài đặt và gỡ bỏ thành công.
-[ ] App Android (APK): Chạy ổn định trên nhiều thiết bị.
-[ ] App iOS (IPA): TestFlight build thành công.
-[ ] Website Tài liệu: Tất cả các trang đã được duyệt.
-[ ] Cộng đồng: Discord server và forum đã sẵn sàng.
+# --- KIỂM THỬ ĐA NỀN TẢNG ---
+[ ] Windows 10/11: Installer hoạt động, plugin chạy ổn định.
+[ ] macOS Ventura/Mojave: Installer hoạt động, plugin chạy ổn định.
+[ ] Android 12/13: APK cài đặt và chạy đúng tính năng.
+[ ] iOS 16: Build TestFlight hoạt động trên thiết bị thật.
 `;
 
 
 export const FINAL_SPRINT_PHASES: SprintPhase[] = [
     {
         phase: 1,
-        title: "Giai đoạn 1: Đóng gói Sản phẩm",
-        description: "Tập trung vào việc hoàn thiện plugin, kiểm tra các chức năng cốt lõi và tạo các trình cài đặt thân thiện với người dùng cho Windows và macOS.",
+        title: "Tạo trình cài đặt Windows (.exe)",
+        description: "Đóng gói toàn bộ plugin, backend AI và các tài nguyên phụ thuộc vào một trình cài đặt .exe duy nhất, giúp người dùng Windows cài đặt dễ dàng.",
         tasks: [
             {
-                description: "Hoàn thiện Plugin Moho & Lua Mapping: Thực hiện các kiểm tra cuối cùng về môi trường, cài đặt file và các chức năng cốt lõi như đồng bộ timeline, ánh xạ layer và hợp nhất keyframe.",
+                description: "Quy trình đóng gói bao gồm việc kiểm tra môi trường, sao chép các tệp cần thiết, đóng gói backend Python và tạo một trình cài đặt hoàn chỉnh bằng Inno Setup hoặc NSIS.",
                 code: {
-                    title: "Checklist Hoàn thiện Plugin (Shell)",
+                    title: "Các bước build trình cài đặt Windows",
                     language: "shell",
-                    code: PLUGIN_VERIFICATION_CODE,
-                }
-            },
-            {
-                description: "Xây dựng Trình cài đặt (Windows & macOS): Tạo các gói cài đặt (.exe, .pkg) để tự động hóa quá trình thiết lập cho người dùng cuối, bao gồm kiểm tra dependencies và sao chép file.",
-                code: {
-                    title: "Kịch bản Build Trình cài đặt (Shell)",
-                    language: "shell",
-                    code: INSTALLERS_BUILD_CODE,
+                    code: WINDOWS_INSTALLER_CODE,
                 }
             }
         ]
     },
     {
         phase: 2,
-        title: "Giai đoạn 2: Triển khai Di động & Web",
-        description: "Xây dựng và đóng gói các ứng dụng cho Android và iOS, đồng thời tạo một trang web tài liệu trung tâm để hướng dẫn người dùng.",
+        title: "Tạo trình cài đặt macOS (.pkg / .dmg)",
+        description: "Tạo một gói cài đặt .pkg hoặc .dmg thân thiện với người dùng macOS, tự động hóa việc cài đặt plugin và các dependencies vào đúng thư mục hệ thống.",
         tasks: [
             {
-                description: "Đóng gói Ứng dụng Di động (Android & iOS): Cấu hình và build các tệp APK và IPA, đảm bảo các quyền cần thiết và tích hợp backend AI một cách chính xác.",
+                description: "Sử dụng các công cụ dòng lệnh tiêu chuẩn của macOS như `py2app`, `pkgbuild`, và `productbuild` để tạo ra một trình cài đặt được ký và đáng tin cậy.",
                 code: {
-                    title: "Quy trình Build Di động (Shell)",
+                    title: "Các bước build trình cài đặt macOS",
                     language: "shell",
-                    code: MOBILE_BUILD_CODE,
+                    code: MACOS_INSTALLER_CODE,
                 }
-            },
+            }
+        ]
+    },
+    {
+        phase: 3,
+        title: "Build ứng dụng Android (.apk)",
+        description: "Phát triển và đóng gói ứng dụng Android, tích hợp backend AI đã được tối ưu hóa (TFLite) để thu thập dữ liệu chuyển động hiệu quả trên thiết bị di động.",
+        tasks: [
             {
-                description: "Xây dựng Website Tài liệu: Sử dụng MkDocs để tạo một trang tài liệu chuyên nghiệp, bao gồm hướng dẫn cài đặt, video tutorials và các câu hỏi thường gặp.",
+                description: "Quy trình build sử dụng Android Studio và Gradle, tập trung vào việc tích hợp AI và đảm bảo các tính năng cốt lõi như timeline và mapping hoạt động đồng bộ với plugin trên PC.",
                 code: {
-                    title: "Lệnh triển khai Website Tài liệu (Shell)",
+                    title: "Các bước build ứng dụng Android",
+                    language: "shell",
+                    code: ANDROID_BUILD_CODE,
+                }
+            }
+        ]
+    },
+    {
+        phase: 4,
+        title: "Build ứng dụng iOS (.ipa)",
+        description: "Xây dựng phiên bản iOS của ứng dụng, sử dụng các công nghệ gốc như SwiftUI và CoreML để mang lại hiệu suất và trải nghiệm người dùng tốt nhất trên hệ sinh thái Apple.",
+        tasks: [
+            {
+                description: "Quy trình yêu cầu chuyển đổi mô hình AI sang định dạng CoreML, xây dựng giao diện bằng SwiftUI, và đóng gói ứng dụng bằng Xcode để phân phối qua TestFlight hoặc App Store.",
+                code: {
+                    title: "Các bước build ứng dụng iOS",
+                    language: "shell",
+                    code: IOS_BUILD_CODE,
+                }
+            }
+        ]
+    },
+    {
+        phase: 5,
+        title: "Tạo website tài liệu & video tutorials",
+        description: "Xây dựng một trang web tài liệu trung tâm để cung cấp hướng dẫn cài đặt, tài liệu API cho LUA, câu hỏi thường gặp (FAQ), và các video hướng dẫn trực quan.",
+        tasks: [
+            {
+                description: "Sử dụng các công cụ tạo trang tĩnh hiện đại như MkDocs hoặc Docusaurus và triển khai lên các nền tảng hosting miễn phí như GitHub Pages hoặc Netlify.",
+                code: {
+                    title: "Các bước tạo website tài liệu",
                     language: "shell",
                     code: DOCS_WEBSITE_CODE,
                 }
@@ -622,22 +690,29 @@ export const FINAL_SPRINT_PHASES: SprintPhase[] = [
         ]
     },
     {
-        phase: 3,
-        title: "Giai đoạn 3: Cộng đồng & Phát hành",
-        description: "Thiết lập các kênh hỗ trợ cộng đồng và thực hiện quy trình kiểm tra chất lượng cuối cùng (QA) trên toàn bộ hệ sinh thái trước khi phát hành chính thức.",
+        phase: 6,
+        title: "Thiết lập cộng đồng",
+        description: "Xây dựng các kênh giao tiếp chính thức để hỗ trợ người dùng, thu thập phản hồi, và tạo một không gian để cộng đồng chia sẻ các tác phẩm và kinh nghiệm của họ.",
         tasks: [
             {
-                description: "Thiết lập Nền tảng Cộng đồng: Tạo server Discord và diễn đàn để người dùng có thể báo cáo lỗi, yêu cầu tính năng và hỗ trợ lẫn nhau.",
+                description: "Tạo một server Discord và/hoặc một diễn đàn chuyên dụng với các kênh được phân chia rõ ràng cho việc hỗ trợ, báo lỗi, và yêu cầu tính năng mới.",
                 code: {
-                    title: "Các bước Thiết lập Cộng đồng",
+                    title: "Các bước thiết lập cộng đồng",
                     language: "shell",
                     code: COMMUNITY_SETUP_CODE,
                 }
-            },
+            }
+        ]
+    },
+    {
+        phase: 7,
+        title: "Kiểm tra cuối cùng & Hạn chế rủi ro",
+        description: "Thực hiện một loạt các bài kiểm tra toàn diện trên tất cả các nền tảng để đảm bảo các tính năng cốt lõi hoạt động như mong đợi và các rủi ro tiềm ẩn đã được giải quyết.",
+        tasks: [
             {
-                description: "Kiểm tra Cuối cùng (Final QA): Thực hiện một checklist kiểm tra toàn diện để đảm bảo tất cả các thành phần của dự án hoạt động đồng bộ và sẵn sàng cho việc phát hành.",
+                description: "Checklist này bao gồm việc xác minh các yêu cầu kỹ thuật quan trọng và kiểm tra tính tương thích trên các hệ điều hành mục tiêu.",
                 code: {
-                    title: "Checklist Kiểm tra Chất lượng Cuối cùng",
+                    title: "Checklist Kiểm tra Chất lượng (QA)",
                     language: "markdown",
                     code: FINAL_QA_CHECKLIST_CODE,
                 }
