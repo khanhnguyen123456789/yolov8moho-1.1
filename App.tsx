@@ -20,6 +20,7 @@ import { CameraPluginDirective } from './components/CameraPluginDirective';
 import { ImplementationDirectives } from './components/ImplementationDirectives';
 import { Timeline } from './components/Timeline';
 import { Yolov8MohoV1_1Directives } from './components/Yolov8MohoV1_1Directives';
+import { FixDirectives } from './components/FixDirectives';
 import {
   TECH_STACK_PROGRAMMING,
   TECH_STACK_AI,
@@ -109,6 +110,10 @@ const App: React.FC = () => {
 
         <Section title="Yêu cầu thực hiện – Fix rủi ro UX & kỹ thuật Yolov8Moho 1.1">
           <Yolov8MohoV1_1Directives />
+        </Section>
+
+        <Section title="Yêu cầu thực hiện – Fix">
+          <FixDirectives />
         </Section>
         
         <Section title="Giai Đoạn Phát Triển Nước Rút (Final Sprint)">
