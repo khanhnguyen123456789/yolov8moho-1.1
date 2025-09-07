@@ -22,6 +22,7 @@ interface TimelineLayer {
     name: string;
     icon: JSX.Element;
     keyframes: number[];
+    color?: string;
 }
 
 const TIMELINE_DATA: TimelineLayer[] = [
@@ -29,10 +30,10 @@ const TIMELINE_DATA: TimelineLayer[] = [
     { id: 'bone-scale', name: 'Bone Scale', icon: <BoneScaleIcon />, keyframes: [0, 12, 36] },
     { id: 'bone-rotate', name: 'Bone Rotate', icon: <BoneRotateIcon />, keyframes: [0, 12, 18, 24, 30, 36] },
     { id: 'bone-shear', name: 'Bone Shear/Squash', icon: <BoneShearIcon />, keyframes: [0] },
-    { id: 'camera-track', name: 'Theo dõi Camera', icon: <CameraIcon number={4} />, keyframes: [0] },
-    { id: 'camera-zoom', name: 'Thu phóng Camera', icon: <CameraIcon number={5} />, keyframes: [0] },
-    { id: 'camera-rotate', name: 'Xoay Camera', icon: <CameraIcon number={6} />, keyframes: [0] },
-    { id: 'camera-pan', name: 'Quét/Nghiêng Camera', icon: <CameraIcon number={7} />, keyframes: [0] },
+    { id: 'camera-track', name: 'Theo dõi Camera (4)', icon: <CameraIcon number={4} />, keyframes: [0, 18, 36, 54], color: '#C4B5FD' /* Violet */ },
+    { id: 'camera-zoom', name: 'Thu phóng Camera (5)', icon: <CameraIcon number={5} />, keyframes: [0, 24, 60], color: '#FFD700' /* Gold */ },
+    { id: 'camera-rotate', name: 'Xoay Camera (6)', icon: <CameraIcon number={6} />, keyframes: [0, 48], color: '#1E90FF' /* Dodger Blue */ },
+    { id: 'camera-pan', name: 'Quét/Nghiêng Camera (7)', icon: <CameraIcon number={7} />, keyframes: [0, 12, 24, 36, 48, 60], color: '#32CD32' /* Lime Green */ },
 ];
 
 const MAX_FRAMES = 72;
@@ -69,9 +70,12 @@ const TimelineLayerRow: React.FC<{ layer: TimelineLayer }> = ({ layer }) => (
             {layer.keyframes.map(frame => (
                 <div
                     key={frame}
-                    title={`Khóa Xương (Frame ${frame})`}
-                    className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-gray-200 rounded-full border border-gray-800 -translate-x-1/2 cursor-pointer hover:scale-125 transition-transform"
-                    style={{ left: `${(frame / MAX_FRAMES) * 100}%` }}
+                    title={`Keyframe at Frame ${frame}`}
+                    className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border border-gray-800 -translate-x-1/2 cursor-pointer hover:scale-125 transition-transform"
+                    style={{
+                        left: `${(frame / MAX_FRAMES) * 100}%`,
+                        backgroundColor: layer.color || '#E5E7EB', // Default to light gray
+                    }}
                 ></div>
             ))}
         </div>

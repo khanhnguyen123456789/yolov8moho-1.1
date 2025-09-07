@@ -17,6 +17,7 @@ import { TrackingFeatures } from './components/TrackingFeatures';
 import { HybridAiArchitecture } from './components/HybridAiArchitecture';
 import { DeploymentOrder } from './components/DeploymentOrder';
 import { CameraPluginDirective } from './components/CameraPluginDirective';
+import { ImplementationDirectives } from './components/ImplementationDirectives';
 import { Timeline } from './components/Timeline';
 import {
   TECH_STACK_PROGRAMMING,
@@ -99,6 +100,10 @@ const App: React.FC = () => {
 
         <Section title="Chỉ thị Kỹ thuật: Cải tiến & Nâng cấp Camera Plugin">
           <CameraPluginDirective />
+        </Section>
+
+        <Section title="Chỉ thị Bổ sung: Sửa lỗi & Tối ưu hóa">
+          <ImplementationDirectives />
         </Section>
         
         <Section title="Giai Đoạn Phát Triển Nước Rút (Final Sprint)">
