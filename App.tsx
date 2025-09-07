@@ -17,6 +17,7 @@ import { TrackingFeatures } from './components/TrackingFeatures';
 import { HybridAiArchitecture } from './components/HybridAiArchitecture';
 import { DeploymentOrder } from './components/DeploymentOrder';
 import { CameraPluginDirective } from './components/CameraPluginDirective';
+import { Timeline } from './components/Timeline';
 import {
   TECH_STACK_PROGRAMMING,
   TECH_STACK_AI,
@@ -160,6 +161,13 @@ const App: React.FC = () => {
                 <h3 className="text-xl font-semibold text-white mb-4">Ví dụ Logic Lọc Keyframe (Pseudocode)</h3>
                 <CodeBlock code={KEYFRAME_FILTERING_LOGIC_PSEUDOCODE} language="python" />
             </div>
+        </Section>
+
+        <Section title="Giao diện Timeline & Mapping Keyframe">
+          <p className="mb-8 text-gray-400 leading-relaxed max-w-4xl">
+            Giao diện timeline của plugin được thiết kế để mô phỏng chính xác trải nghiệm trong Moho Studio Pro. Nó trực quan hóa cách dữ liệu Pose AI và Camera AI được ánh xạ thành các keyframe cụ thể trên các layer tương ứng. Mỗi hàng đại diện cho một thuộc tính có thể diễn hoạt (xương, camera), và các chấm trắng biểu thị các keyframe được tạo tự động, mang lại cho người dùng một cái nhìn tổng quan rõ ràng và quen thuộc về kết quả cuối cùng.
+          </p>
+          <Timeline />
         </Section>
 
         <Section title="Yêu Cầu Kỹ Thuật và Tài Nguyên">
